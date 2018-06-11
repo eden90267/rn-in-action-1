@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
 修改 app.js 文件的代碼如下：
 
 ```javascript
+// App.js
 /**
  * Sample React Native App
  * https://github.com/facebook/react-native
@@ -286,16 +287,7 @@ ios。Android 則返回 android。所以可在不同平台上設置不同 margin
 
 ```javascript
 // App.js
-import React, {Component} from 'react';
-import {
-  Platform,
-  StyleSheet,
-  Text,
-  View
-} from 'react-native';
-
 // ...
-
 const styles = StyleSheet.create({
   container: {
     flex: 1
@@ -315,3 +307,270 @@ const styles = StyleSheet.create({
 
 ### 實現搜索欄
 
+```javascript
+// App.js
+export default class App extends Component<{}> {
+  render() {
+    return (
+      <View style={styles.container}>
+        <View style={styles.searchbar}>
+          <TextInput style={styles.input} placeholder="搜索商品"/>
+          <Button style={styles.button} title="搜索" onPress={f => f}/>
+        </View>
+        <View style={styles.advertisement}>
+          <Text>
+            輪播廣告
+          </Text>
+        </View>
+        <View style={styles.products}>
+          <Text>
+            商品列表
+          </Text>
+        </View>
+      </View>
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  // ...
+  searchbar: {
+    marginTop: Platform.OS === 'ios'
+    ? 20
+    : 0,
+    height: 40,
+    flexDirection: 'row'
+  },
+  input: {
+    flex: 1,
+    borderColor: 'gray',
+    borderWidth: 2
+  },
+  button: {
+    flex: 1
+  },
+  // ...
+});
+```
+
+### 設計輪播廣告
+
+React Native 提供的 ScrollView 和 ViewPager 組件都可以實現輪播廣告的效果。但是 ViewPager 是 Android 平台特有的組件，為了考慮平台兼容性和代碼復用性，這裡使用 ScrollView 來實現輪播效果。
+
+> 小知識：從組件命名的後綴可以看出哪些組件是哪個平台特有的： XxxIOS、XxxAndroid 等
+
+1. ScrollView 的使用
+
+```javascript
+// App.js
+export default class App extends Component<{}> {
+  render() {
+    return (
+      <View style={styles.container}>
+        <View style={styles.searchbar}>
+          <TextInput style={styles.input} placeholder="搜索商品"/>
+          <Button style={styles.button} title="搜索" onPress={f => f}/>
+        </View>
+        <View style={styles.advertisement}>
+          <ScrollView ref="scrollView"
+                      horizontal={true}
+                      showsHorizontalScrollIndicator={false}
+                      pagingEnabled={true}>
+            <Text style={{
+              width: 100,
+              height: 180,
+              backgroundColor: 'gray'
+            }}>廣告 1</Text>
+            <Text style={{
+              width: 100,
+              height: 180,
+              backgroundColor: 'orange'
+            }}>廣告 2</Text>
+            <Text style={{
+              width: 100,
+              height: 180,
+              backgroundColor: 'yellow'
+            }}>廣告 3</Text>
+          </ScrollView>
+        </View>
+        <View style={styles.products}>
+          <Text>
+            商品列表
+          </Text>
+        </View>
+      </View>
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  // ...
+  advertisement: {
+    height: 180
+  },
+  // ...
+});
+```
+
+2. 完善輪播廣告
+
+設置每一個廣告頁的寬度為屏幕寬度。
+
+同樣，React Native 已經提供了 API：Dimensions 來獲取屏幕的寬高。
+
+將 Text 組件的寬度從 `width: 100` 修改成 `width: Dimensions.get('window').width`：
+
+```javascript
+// App.js
+export default class App extends Component<{}> {
+  render() {
+    return (
+      <View style={styles.container}>
+        <View style={styles.searchbar}>
+          <TextInput style={styles.input} placeholder="搜索商品"/>
+          <Button style={styles.button} title="搜索" onPress={f => f}/>
+        </View>
+        <View style={styles.advertisement}>
+          <ScrollView ref="scrollView"
+                      horizontal={true}
+                      showsHorizontalScrollIndicator={false}
+                      pagingEnabled={true}>
+            <Text style={{
+              width: Dimensions.get('window').width,
+              height: 180,
+              backgroundColor: 'gray'
+            }}>廣告 1</Text>
+            <Text style={{
+              width: Dimensions.get('window').width,
+              height: 180,
+              backgroundColor: 'orange'
+            }}>廣告 2</Text>
+            <Text style={{
+              width: Dimensions.get('window').width,
+              height: 180,
+              backgroundColor: 'yellow'
+            }}>廣告 3</Text>
+          </ScrollView>
+        </View>
+        <View style={styles.products}>
+          <Text>
+            商品列表
+          </Text>
+        </View>
+      </View>
+    );
+  }
+}
+```
+
+3. 讓輪播廣告動起來
+
+```javascript
+export default class App extends Component<{}> {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      currentPage: 0
+    };
+  }
+  
+  render() {
+    // ...
+  }
+
+  componentDidMount() {
+    this._startTimer();
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  _startTimer() {
+    this.interval = setInterval(() => {
+      let nextPage = this.state.currentPage + 1;
+      if (nextPage >= 3) {
+        nextPage = 0;
+      }
+      this.setState({currentPage: nextPage});
+      const offsetX = nextPage * Dimensions.get('window').width; // 計算 ScrollView 滾動的 X 軸偏移量 (因為是橫向滾動)
+      this.refs.scrollView.scrollResponderScrollTo({x: offsetX, y: 0, animated: true});
+    }, 2000);
+  }
+}
+```
+
+### 展示商品列表
+
+可使用 Reaact Native 提供的 ListView 組件。
+
+ListView 組件是 React Native 開發中常用的組件，也是 React Native 最核心的組件之一，主要用來高效顯示一個可以垂直滾動變化的數據列表。
+
+```javascript
+const ds = new ListView.DataSource({ // 創建 ListView.DataSource 數據源
+  rowHasChanged: (r1, r2) => r1 !== r2
+});
+
+export default class App extends Component<{}> {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      currentPage: 0,
+      dataSource: ds.cloneWithRows([ // 為數據源傳遞一個數組
+        '商品 1',
+        '商品 2',
+        '商品 3',
+        '商品 4',
+        '商品 5',
+        '商品 6',
+        '商品 7',
+        '商品 8',
+        '商品 9',
+        '商品 10',
+      ])
+    };
+  }
+
+  render() {
+    return (
+      <View style={styles.container}>
+        {/* ... */}
+        <View style={styles.products}>
+          <ListView dataSource={this.state.dataSource} renderRow={this._renderRow}/>
+        </View>
+      </View>
+    );
+  }
+
+  _renderRow = (rowData, sectionID, rowID) => {
+    return (
+      <View style={styles.row}>
+        <Text>{rowData}</Text>
+      </View>
+    )
+  }
+
+  // ...
+}
+
+const styles = StyleSheet.create({
+  // ...
+  products: {
+    flex: 1,
+  },
+  row: {
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }
+});
+```
+
+使用 ListView 組件必須實現以下兩個屬性：
+
+- dataSource：ListView 組建的數據源。這裏使用 state 來保存數據。提供給數據源的 rowHasChanged() 函數告訴 ListView 組件是否需要重繪某一列，即該列數據發生變化時對該列進行重繪。
+- renderRow()：該函數根據數據源中每一條數據，返回列表每一行顯示的組件。它的函數原型：`(rowData, sectionID, rowID) => renderable`
+
+後面還將介紹更多 ListView 的屬性和用法。
