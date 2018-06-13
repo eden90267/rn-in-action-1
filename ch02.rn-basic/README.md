@@ -574,3 +574,125 @@ const styles = StyleSheet.create({
 - renderRow()：該函數根據數據源中每一條數據，返回列表每一行顯示的組件。它的函數原型：`(rowData, sectionID, rowID) => renderable`
 
 後面還將介紹更多 ListView 的屬性和用法。
+
+### 實現交互功能和狀態欄
+
+現在來為 UI 添加單擊操作的響應
+
+1. 讓搜尋框能響應用戶操作
+
+```javascript
+export default class App extends Component<{}> {
+  
+  // ...
+  
+  render() {
+    return (
+      <View style={styles.container}>
+        <View style={styles.searchbar}>
+          <TextInput style={styles.input} placeholder="搜索商品"/>
+          <Button style={styles.button} title="搜索" onPress={() => Alert.alert('你單擊了搜索按鈕', null, null)}/>
+        </View>
+      </View>
+    );
+  }
+  
+  // ...
+}
+```
+
+2. 給輪播圖和商品列表添加單擊響應
+
+輪播圖和商品列表不是 Button 組件，所以需要使用一個新的 React Native 組件 TouchableHighlight。
+
+TouchableHighlight 組件主要用於封裝其他組件，使其可以正確響應單擊操作，代碼如下：
+
+```javascript
+export default class App extends Component<{}> {
+  
+  // ...
+  
+  render() {
+      return (
+        <View style={styles.container}>
+          <View style={styles.searchbar}>
+            <TextInput style={styles.input} placeholder="搜索商品"/>
+            <Button style={styles.button} title="搜索" onPress={() => Alert.alert('你單擊了搜索按鈕', null, null)}/>
+          </View>
+          <View style={styles.advertisement}>
+            <ScrollView ref="scrollView"
+                        horizontal={true}
+                        showsHorizontalScrollIndicator={false}
+                        pagingEnabled={true}>
+              <TouchableHighlight onPress={() => Alert.alert('你單擊了輪播圖', null, null)}>
+                <Text style={{
+                  width: Dimensions.get('window').width,
+                  height: 180,
+                  backgroundColor: 'gray'
+                }}>廣告 1</Text>
+              </TouchableHighlight>
+              {/* ... */}
+            </ScrollView>
+          </View>
+        </View>
+      );
+  }
+  
+  _renderRow = (rowData, sectionID, rowID) => {
+    return (
+      <TouchableHighlight onPress={() => Alert.alert('你單擊了商品列表', null, null)}>
+        <View style={styles.row}>
+          <Text>{rowData}</Text>
+        </View>
+      </TouchableHighlight>
+    )
+  }
+}
+```
+
+3. 實現狀態欄
+
+StatusBar 可以根據自己的需求來配置它。代碼如下：
+
+```javascript
+export default class App extends Component<{}> {
+  
+  // ...
+  
+  render() {
+      return (
+        <View style={styles.container}>
+          <StatusBar backgroundColor={'blue'} barStyle={'default'} networkActivityIndicatorVisible={true}>
+          </StatusBar>
+          {/* ... */}
+        </View>
+      );
+  }
+  
+  // ...
+}
+```
+
+- Android App 沒有顯示網絡請求的狀態
+- iOS App 則是背景顏色沒有生效
+
+原來是 React Native 的 StatusBar 組件的部分屬性只在特定平台生效。
+
+例如，StatusBar 組件常用屬性的平台兼容如下：
+
+- animated 和 hidden 屬性在 iOS、Android 平台都有效
+- backgroundColor 和 translucent 屬性只在 Android 平台有效
+- barStyle、networkActivityIndicatorVisible 以及 showHideTransition 屬性只在 iOS 平台有效
+
+所以就有了上面的平台差異性。
+
+## 小結
+
+我們梳理下本章學習到的 React Native 知識：
+
+- Git、JSX、Flexbox 以及 React Native 調試方法
+- 將 iOS App 與 Android App 復用相同的組件 App.js，並瞭解 React Native 應用開發的一般流程
+- Flexbox 佈局
+- 簡單實現了各個組件 (View、Text、TextInput、Button、ScrollView、ListView、Alert、TouchableHighlight 以及 StatusBar) 的用法
+
+第三章，一起來進一步完善我們的應用吧！
