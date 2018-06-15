@@ -507,3 +507,216 @@ const styles = StyleSheet.create({
 
 ## 完善商品列表 —— ListView 組件
 
+### 對圖片資源進行重構
+
+將 image 相關圖片拉到 images 文件夾中，讓目錄結構不會因為增加圖片而變得糟糕。
+
+### 重新定義商品模型
+
+```javascript
+// app.js
+export default class App extends Component<{}> {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      // ...
+      dataSource: ds.cloneWithRows([ // 為數據源傳遞一個數組
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 1',
+          subTitle: '描述 1'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 2',
+          subTitle: '描述 2'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 3',
+          subTitle: '描述 3'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 3',
+          subTitle: '描述 3'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 4',
+          subTitle: '描述 4'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 5',
+          subTitle: '描述 5'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 6',
+          subTitle: '描述 6'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 7',
+          subTitle: '描述 7'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 8',
+          subTitle: '描述 8'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 9',
+          subTitle: '描述 9'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 10',
+          subTitle: '描述 10'
+        }
+      ]),
+      // ...
+    };
+  }
+  
+  // ...
+
+  _renderRow = (rowData, sectionID, rowID) => {
+    return (
+      <TouchableHighlight onPress={() => Alert.alert('你單擊了商品列表', null, null)}>
+        <View style={styles.row}>
+          <Image source={rowData.image} style={styles.productImage}/>
+          <Text style={styles.productTitle}>{rowData.title}</Text>
+          <Text style={styles.productSubTitle}>{rowData.subTitle}</Text>
+        </View>
+      </TouchableHighlight>
+    )
+  }
+  
+  // ...
+}
+
+const styles = StyleSheet.create({
+  // ...
+  row: {
+    height: 60,
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  productImage: {
+    marginLeft: 10,
+    width: 40,
+    height: 40
+  },
+  productText: {},
+  productTitle: {},
+  productSubTitle: {}
+});
+```
+
+### 商品佈局的優化
+
+```javascript
+_renderRow = (rowData, sectionID, rowID) => {
+  return (
+    <TouchableHighlight onPress={() => Alert.alert('你單擊了商品列表', null, null)}>
+      <View style={styles.row}>
+        <Image source={rowData.image} style={styles.productImage}/>
+        <View style={styles.productText}>{/* flexDirection 默認為 "column" */}
+          <Text style={styles.productTitle}>{rowData.title}</Text>
+          <Text style={styles.productSubTitle}>{rowData.subTitle}</Text>
+        </View>
+      </View>
+    </TouchableHighlight>
+  )
+}
+```
+
+接著優化樣式：
+
+```javascript
+const styles = StyleSheet.create({
+  // ...
+  row: {
+    height: 60,
+    flexDirection: 'row',
+    backgroundColor: 'white'
+  },
+  productImage: {
+    width: 40,
+    height: 40,
+    marginLeft: 10,
+    marginRight: 10,
+    alignSelf: 'center'
+  },
+  productText: {
+    flex: 1,
+    marginTop: 10,
+    marginBottom: 10
+  },
+  productTitle: {
+    flex: 3,
+    fontSize: 16
+  },
+  productSubTitle: {
+    flex: 2,
+    fontSize: 14,
+    color: 'gray'
+  }
+});
+```
+
+最後，為列表添加分割線。ListView 已經為開發者提供了方法，renderSeparator() 函數，只要實現該函數即可：
+
+```javascript
+// app.js
+export default class App extends Component<{}> {
+
+  // ...
+  
+  render() {
+    const advertisementCount = this.state.advertisements.length;
+    const indicatorWidth = circleSize * advertisementCount + circleMargin * advertisementCount * 2;
+    const left = (Dimensions.get('window').width - indicatorWidth) / 2;
+
+    return (
+      <View style={styles.container}>
+        {/* ... */}
+        <View style={styles.products}>
+          <ListView dataSource={this.state.dataSource}
+                    renderRow={this._renderRow}
+                    renderSeparator={this._renderSeparator}/>
+        </View>
+      </View>
+    );
+  }
+  
+  _renderSeparator(sectionID, rowID, adjacentRowHighlighted) {
+    return (
+      <View key={`${sectionID}-${rowID}`} style={styles.divider}/>
+    )
+  }
+  
+  // ...
+  
+}
+
+const styles = StyleSheet.create({
+  // ...
+  divider: {
+    height: 1,
+    width: Dimensions.get('window').width - 5,
+    marginLeft: 5,
+    backgroundColor: 'lightgray'
+  }
+});
+```
+
+至此，電商 App 的首頁已經煥然一新。
+
+## 拖曳刷新列表 —— RefreshControl 組件
+
+該 App 還缺少一個常用的功能，那就是拖曳刷新。
