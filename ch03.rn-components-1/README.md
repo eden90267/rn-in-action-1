@@ -719,4 +719,129 @@ const styles = StyleSheet.create({
 
 ## 拖曳刷新列表 —— RefreshControl 組件
 
-該 App 還缺少一個常用的功能，那就是拖曳刷新。
+該 App 還缺少一個常用的功能，那就是拖曳刷新。添加按鈕會讓用戶體驗沒那麼好，畢竟現在移動開發屏幕小，額外添加按鈕對介面設計影響較大？
+
+為實現拖曳刷新列錶效果，需使用新的 React Native
+組件：RefreshControl。RefreshControl 組件用在 ScrollView 或 ListView
+內部，為其添加下拉刷新的功能。
+
+在使用 RefreshControl 組件前，首先要在 this.state 中添加一個是否正在刷新中的標誌：
+
+```javascript
+// app.js
+export default class App extends Component<{}> {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      // ...
+      isRefreshing: false
+    };
+  }
+  
+  // ...
+  
+}
+```
+
+在 ListView 組件中添加 RefreshControl。修改 ListView 相關代碼如下：
+
+```javascript
+// app.js
+export default class App extends Component<{}> {
+
+  // ...
+
+  render() {
+    // ...
+
+    return (
+      <View style={styles.container}>
+        {/* ... */}
+        <View style={styles.products}>
+          <ListView dataSource={this.state.dataSource}
+                    renderRow={this._renderRow}
+                    renderSeparator={this._renderSeparator}
+                    refreshControl={this._renderRefreshControl()}/>
+        </View>
+      </View>
+    );
+  }
+  _renderRefreshControl() {
+    return (
+      <RefreshControl
+        refreshing={this.state.isRefreshing}
+        tintColor={'#FF0000'}
+        title={'正在刷新數據，請稍候...'}
+        titleColor={'#0000FF'}>
+      </RefreshControl>
+    )
+  }
+  
+  // ...
+  
+}
+```
+
+接著需要為 RefreshControl 添加狀態變化的邏輯：
+
+```javascript
+// app.js
+export default class App extends Component<{}> {
+  
+  // ...
+  
+  _renderRefreshControl() {
+    return (
+      <RefreshControl
+        refreshing={this.state.isRefreshing}
+        onRefresh={this._onRefresh}
+        tintColor={'#FF0000'}
+        title={'正在刷新數據，請稍候...'}
+        titleColor={'#0000FF'}>
+      </RefreshControl>
+    )
+  }
+
+  _onRefresh = () => {
+    this.setState({isRefreshing: true});
+
+    setTimeout(() => {
+      this.setState({isRefreshing: false});
+    }, 2000);
+  };
+  
+  // ...
+  
+}
+```
+
+不過 RefreshControl 在不同平台下效果也是完全不同的。
+
+完成拖曳刷新後，還可進一步完善：更新商品數據，並刷新列表：
+
+```javascript
+// app.js
+export default class App extends Component<{}> {
+  
+  // ...
+  
+  _onRefresh = () => {
+    this.setState({isRefreshing: true});
+  
+    setTimeout(() => {
+      const products = Array.from(new Array(10)).map((value, index) => ({
+        image: require('./images/advertisement-image-01.jpg'),
+        title: '新商品' + index,
+        subTitle: '新商品描述' + index
+      }));
+      this.setState({isRefreshing: false, dataSource: ds.cloneWithRows(products)});
+    }, 2000);
+  };
+  
+  // ...
+  
+}
+```
+
+## 添加頁面跳轉功能 —— Navigator 組件
