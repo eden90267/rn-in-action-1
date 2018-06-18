@@ -845,3 +845,75 @@ export default class App extends Component<{}> {
 ```
 
 ## 添加頁面跳轉功能 —— Navigator 組件
+
+React Native 實現頁面跳轉的組件有 Navigator 以及 NavigatorIOS，和前面介紹過的
+ViewPagerAndroid 問題一樣，為考慮平台兼容性和代碼複用性，這裡使用 Navigator 組件。
+
+這裡先將首頁的實現移植到 home.js 新建的文件。
+
+```javascript
+export default class home extends Component<{}> {
+```
+
+修改 app.js 代碼如下：
+
+```javascript
+import React, {Component} from 'react';
+import {
+  View
+} from 'react-native';
+import {Navigator} from 'react-native-deprecated-custom-components';
+import Home from "./Home";
+
+export default class App extends Component<{}> {
+
+  render() {
+    return (
+      <Navigator
+        initialRoute={{
+          name: 'home',
+          component: Home
+        }}
+        configureScene={(route) => {
+          return Navigator.SceneConfigs.FloatFromRight;
+        }}
+        renderScene={(route, navigator) => {
+          const Component = route.component;
+          return <Component {...route.params} navigator={navigator}/>
+        }}
+      />
+    )
+  }
+
+}
+```
+
+重新加載運用，保證運行效果和重構前完全一致。
+
+這裡來一一說明上述代碼：
+
+- initialRoute 屬性：定義了應用啟動時加載的路由 (route)，而路由是 Navigator
+  組件用來識別渲染場景的一個對象，簡單說，initialRoute
+  中定義的組件就是應用第一個要顯示的頁面，這就是首頁 home.js
+- configureScene 屬性：定義了頁面之間跳轉的動畫，包括：
+  - FloatFromRight
+  - FloatFromLeft
+  - FloatFromBottom
+  - FloatFromBttomAndroid
+  - FadeAndroid
+  - HorizontalSwipeJump
+  - HorizontalSwipeJumpFromRight
+  - VerticalUpSwipeJump
+- renderScene() 函數可透過 React Native 調試來一看究竟。route 參數的 name 和
+  component 就是在 initialRoute 屬性中傳遞的 home 和 home 組件，所以 app.js
+  文件中運行代碼：
+
+  ```javascript
+  return <Component {...route.params} navigator={navigator}/>
+  ```
+
+  的作用就是返回 home 組件。當然，這裏也將 navigator 參數也傳遞了 home
+  組件：透過 `{...route.params}` 以及 `navigator={navigator}`，於是，在
+  home 組件中就可以使用 this.props.navigator 來獲取 navigator。
+
+## 二級頁面的跳轉 —— TouchableOpacity 組件
