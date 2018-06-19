@@ -917,3 +917,200 @@ export default class App extends Component<{}> {
   home 組件中就可以使用 this.props.navigator 來獲取 navigator。
 
 ## 二級頁面的跳轉 —— TouchableOpacity 組件
+
+理解了 Navigatore 的基本用法之後，下一步，添加一個新的組件，以便實現二級頁面跳轉的效果。
+
+1. 添加新的文件 detail.js，代碼：
+
+```javascript
+import React, {Component} from 'react';
+import {StyleSheet, Text, View} from "react-native";
+
+export default class Detail extends Component<{}> {
+  render() {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.text}>
+          詳情頁面
+        </Text>
+      </View>
+    )
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'gray',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  text: {
+    fontSize: 20
+  }
+});
+```
+
+2. 在首頁修改按鈕響應，添加跳轉到下一個頁面的入口。
+
+```javascript
+export default class Home extends Component<{}> {
+  
+  // ...
+  
+  _renderRow = (rowData, sectionID, rowID) => {
+    return (
+      <TouchableHighlight onPress={() => {
+        const {navigator} = this.props;
+        if (navigator) {
+          navigator.push({name: 'detail', component: Detail})
+        }
+      }}>
+        <View style={styles.row}>
+          <Image source={rowData.image} style={styles.productImage}/>
+          <View style={styles.productText}>{/* flexDirection 默認為 "column" */}
+            <Text style={styles.productTitle}>{rowData.title}</Text>
+            <Text style={styles.productSubTitle}>{rowData.subTitle}</Text>
+          </View>
+        </View>
+      </TouchableHighlight>
+    )
+  };
+  
+  // ...
+
+}
+```
+
+可使用 Navigator 的如下接口來進行場景的切換：
+
+- push(route)：跳轉到新的場景，並且將場景入棧
+- pop：跳轉到上一個場景，並且將當前場景出棧
+- popToRoute(route)：pop 到路由指定的場景，在整個路由棧中，處於指定場景之後的場景都將會被卸載
+- popToTop()：pop 到棧中第一個場景，卸載其他的所有場景
+- replace(route)：用一個新的路由替換掉當前場景
+- replaceAtIndex(route, index)：替換指定序號的路由場景
+- replacePrevious(route)：替換上一個場景
+- 其他方法
+  - jumpBack()
+  - jumpForward()
+  - jumpTo(route)
+  - resetTo(route)
+
+3. 如何返回上一個頁面？答案就是 Navigator.pop() 方法，修改 detail.js：
+
+```javascript
+// detail.js
+export default class Detail extends Component<{}> {
+  render() {
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity onPress={this._pressBackButton.bind(this)}>
+          <Text style={styles.back}>返回</Text>
+        </TouchableOpacity>
+        <Text style={styles.text}>
+          詳情頁面
+        </Text>
+      </View>
+    )
+  }
+
+  _pressBackButton() {
+    const {navigator} = this.props;
+    if (navigator) {
+      navigator.pop();
+    }
+  }
+}
+
+const styles = StyleSheet.create({
+  // ...
+  back: {
+    fontSize: 20,
+    color: 'blue'
+  }
+});
+```
+
+這裡簡單區別一下 Touchable* 組件：
+
+- TouchableHighlight：單擊該組件後，該組件的不透明度會降低同時會看到相應的顏色 (視圖變暗或變亮)
+- TouchableOpacity：單擊該組件後，封裝的組件的不透明度會降低。這個過程並不會真正改變組件層級，大部分情況下很容易添加到應用中而不會帶來副作用
+- TouchableNativeFeedback：只支持 Android 平台，在 Android 平台上該組件可以使用原生平台的狀態資源來顯示觸摸狀態變化
+- TouchableWithoutFeedback：單擊該組件後，該組件沒有任何反應和變化，所以不推薦使用
+
+## 實現頁面間的數據傳遞
+
+跳轉和返回的效果實現了，那麼，如何實現頁面間的數據傳遞和通信呢？
+
+React Native 使用 props 來實現頁面間數據傳遞和通信。在 React Native 中，有兩種方式可以存儲和傳遞數據，即 props 以及 state，其中：
+
+- props 通常在父組件指定，而且一經指定，在被指定的組件的生命週期中則不再改變
+- state 通常是用於存儲需要改變的數據，並且當 state 數據發生更新時，React Native 會刷新介面
+
+所以將首頁的數據傳遞給下一個頁面，需使用 props。修改 Home.js 代碼如下：
+
+```javascript
+// Home.js
+export default class Home extends Component<{}> {
+  
+  // ...
+  
+  _renderRow = (rowData, sectionID, rowID) => {
+    return (
+      <TouchableHighlight onPress={() => {
+        const {navigator} = this.props;
+        if (navigator) {
+          navigator.push({
+            name: 'detail',
+            component: Detail,
+            params: {
+              productTitle: rowData.title
+            }})
+        }
+      }}>
+        {/* ... */}
+      </TouchableHighlight>
+    )
+  };
+  
+  // ...
+  
+}
+```
+
+在 detail.js 中可以使用 this.props.productTitle 來獲得首頁傳遞的數據。
+
+```javascript
+// Detail.js
+export default class Detail extends Component<{}> {
+  
+  render() {
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity onPress={this._pressBackButton.bind(this)}>
+          <Text style={styles.back}>返回</Text>
+        </TouchableOpacity>
+        <Text style={styles.text}>
+          {this.props.productTitle}
+        </Text>
+      </View>
+    )
+  }
+  
+  // ...
+
+}
+```
+
+這樣，一個完整的頁面跳轉和頁面間數據傳遞的功能就實現了。
+
+## 小結
+
+這章我們對已有的應用進行了以下優化：
+
+- 代碼重構：包括組件的復用、邏輯的簡化以及擴展性的優化
+- 樣式美化：自定制了組件的樣式
+- 功能完善：為輪播廣告添加指示器效果，為商品列表添加圖片和詳細說明，為應用添加更多 React Native 提供的組件
+
+這裡學習了多個組件的使用。
