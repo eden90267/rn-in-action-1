@@ -88,3 +88,9 @@ export default class App extends Component<{}> {
 這裡讀者可能會感到好奇，Main 組件的文件名不是 Main.ios.js 和 Main.android.js 嗎？React Native 如何正確找到 Main 組件？
 
 原來 React Native 會自動檢測某個文件是否具有 .ios. 或是 .android. 的擴展名，然後根據當前運行的平台加載正確對應的文件。
+
+這樣命名組件後就可以在其他組件中直接引用，而無需關心當前運行的平台是哪個平台。React
+Native 會根據運行平台的不同引入正確對應的組件。
+
+添加一個新的 ”更多“ 頁面，新建 more.js 文件並添加代碼如下：
+
