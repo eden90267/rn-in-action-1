@@ -498,3 +498,108 @@ React Native 提供大量的原生組件，但是為了進一步提升開發質�
 ```shell
 $ npm i react-native-swiper --save
 ```
+
+home.js 代碼：
+
+```javascript
+import Swiper from 'react-native-swiper'
+
+export default class Home extends Component<{}> {
+  
+  render() {
+    return (
+      <View style={styles.container}>
+        {/* ... */}
+        <View style={styles.advertisement}>
+          <Swiper loop={true} height={190} autoplay={true}>
+            {this.state.advertisements.map((advertisement, index) => {
+              return (
+                <TouchableHighlight key={index} onPress={() => Alert.alert('你單擊了輪播圖', null, null)}>
+                  <Image style={styles.advertisementContent} source={advertisement.image}/>
+                </TouchableHighlight>
+              )
+            })}
+          </Swiper>
+        </View>
+        {/* ... */}
+      </View>
+    );
+  }
+  
+}
+```
+
+要把定時器操作 ScrollView 相關的 code 拿掉，只要做簡單的配置 ("loop={true} autoplay={true}") 就可以達到效果。
+
+### NativeBase 的使用
+
+NativeBase 是一個優秀的 React Native 組件庫，它同時被微軟和 Awesome React Native 推薦，詳見 [https://github.com/GeekyAnts/NativeBase](https://github.com/GeekyAnts/NativeBase)。當然，在使用過後或許會發現，這哪裡僅僅是一個第三方組件，完全是一種要替代 React Native 原生 UI 組件的姿態。這裡就趕快來體驗一下吧：
+
+```shell
+$ yarn add native-base
+```
+
+由於 NativeBase 依賴於 react-native-vector-icons，所以還需要使用：
+
+```shell
+$ npm i react-native-vector-icons --save
+```
+
+P.S. 有時會發生第三包安裝的錯誤，可先停止 React Native 服務，然後再刪除 node_modules 文件夾，接著使用 npm install 重新安裝所有依賴庫，最後再運行 React Native 服務和應用。
+
+下面就可以將原有的實現替換成 NativeBase 的相應組件了，這裡以首頁為例：
+
+1. 首頁的佈局
+
+按照 NativeBase 的 Header 和 Content 佈局方式調整首頁的佈局結構：NativeBase 的所有組件都是放在 Container 組件中的，其中，Header 是導航欄組件，Content 組件用於實現頁面正文。修改 home.js 如下：
+
+```javascript
+export default class Home extends Component<{}> {
+  
+  render() {
+    return (
+      <Container>
+        <Header>
+          <View style={styles.searchbar}>
+            <TextInput style={styles.input} placeholder="搜索商品" onChangeText={(text) => {
+              this.setState({searchText: text});
+              console.log('輸入的內容是 ' + this.state.searchText);
+            }}/>
+            <Button style={styles.button} title="搜索"
+                    onPress={() => Alert.alert('搜索內容 ' + this.state.searchText, null, null)}/>
+          </View>
+        </Header>
+        <Content>
+          <View style={styles.advertisement}>
+            <Swiper loop={true} height={190} autoplay={true}>
+              {this.state.advertisements.map((advertisement, index) => {
+                return (
+                  <TouchableHighlight key={index} onPress={() => Alert.alert('你單擊了輪播圖', null, null)}>
+                    <Image style={styles.advertisementContent} source={advertisement.image}/>
+                  </TouchableHighlight>
+                )
+              })}
+            </Swiper>
+          </View>
+          <View style={styles.products}>
+            <ListView dataSource={this.state.dataSource}
+                      renderRow={this._renderRow}
+                      renderSeparator={this._renderSeparator}
+                      refreshControl={this._renderRefreshControl()}/>
+          </View>
+        </Content>
+      </Container>
+    );
+  }
+  
+}
+```
+
+2. 搜索框的樣式
+
+NativeBase 提供了一套組件，這套組件的功能和樣式是經過測試驗證的，但是 NativeBase 組件與其他組件的兼容性需要調整，為了解決上述問題，最高效的辦法就是使用 NativeBase 組件來實現搜索框，而非自己定義組件和佈局。想要使用 NativeBase 實現搜索框功能，只需要為 Header 組件添加 searchBar 屬性即可：
+
+```javascript
+
+```
+
