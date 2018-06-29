@@ -600,6 +600,277 @@ export default class Home extends Component<{}> {
 NativeBase 提供了一套組件，這套組件的功能和樣式是經過測試驗證的，但是 NativeBase 組件與其他組件的兼容性需要調整，為了解決上述問題，最高效的辦法就是使用 NativeBase 組件來實現搜索框，而非自己定義組件和佈局。想要使用 NativeBase 實現搜索框功能，只需要為 Header 組件添加 searchBar 屬性即可：
 
 ```javascript
+import {Container, Content, Header, Icon, Input, Button, Item} from "native-base";
 
+export default class Home extends Component<{}> {
+  
+  render() {
+    return (
+      <Container>
+        <Header searchBar rounded>
+          <Item>
+            <Icon name="ios-search-outline"/>
+            <Input
+              placeholder="搜索商品"
+              onChangeText={(text) => {
+                this.setState({searchText: text});
+                console.log('輸入的內容是 ' + this.state.searchText);
+              }}/>
+          </Item>
+          <Button transparent onPress={() => {
+            Alert.alert('搜索內容' + this.state.searchText, null, null);
+          }}>
+            <Text>搜索</Text>
+          </Button>
+        </Header>
+        {/* ... */}
+      </Container>
+    );
+  }
+  
+}
 ```
 
+使用 NativeBase 實現搜索框，無需配置任何樣式，但顯示的效果卻如此好看！這就是用 NativeBase 的強大之處：用更簡單的代碼達到更好的效果
+
+3. 商品列表
+
+NativeBase 提供了一系列的組件用於實現列表以及列表中圖片文字的顯示，包括 List、ListItem、Thumbnail 以及 Text。修改 home.js 代碼如下：
+
+```javascript
+export default class Home extends Component<{}> {
+
+  render() {
+    return (
+      <Container>
+        <Header searchBar rounded>
+          {/* ... */}
+        </Header>
+        <Content>
+          {/* ... */}
+          <List>
+            <ListItem avatar>
+              <Left>
+                <Thumbnail square size={40} source={require('./images/advertisement-image-01.jpg')}/>
+              </Left>
+              <Body>
+              <Text>商品 1</Text>
+              <Text note>描述 1</Text>
+              </Body>
+            </ListItem>
+          </List>
+        </Content>
+      </Container>
+    );
+  }
+  
+}
+```
+
+同樣，代碼沒有做任何複雜的樣式和佈局的配置，就實現了類似之前商品列表的效果，而且還自動添加了分割線效果！
+
+4. 數據和響應
+
+添加 List 的數據源和單擊響應。修改 home.js 代罵如下：
+
+```javascript
+export default class Home extends Component<{}> {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      // ...
+      products: [
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 1',
+          subTitle: '描述 1'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 2',
+          subTitle: '描述 2'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 3',
+          subTitle: '描述 3'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 3',
+          subTitle: '描述 3'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 4',
+          subTitle: '描述 4'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 5',
+          subTitle: '描述 5'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 6',
+          subTitle: '描述 6'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 7',
+          subTitle: '描述 7'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 8',
+          subTitle: '描述 8'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 9',
+          subTitle: '描述 9'
+        },
+        {
+          image: require('./images/advertisement-image-01.jpg'),
+          title: '商品 10',
+          subTitle: '描述 10'
+        }
+      ],
+      // ...
+    };
+  }
+
+  render() {
+    return (
+      <Container>
+        <Header searchBar rounded>
+          {/* ... */}
+        </Header>
+        <Content>
+          {/* ... */}
+          <List dataArray={this.state.products} renderRow={this._renderRow}>
+          </List>
+        </Content>
+      </Container>
+    );
+  }
+
+  _renderRow = (product) => {
+    return (
+      <ListItem
+        button
+        onPress={() => {
+          const {navigator} = this.props;
+          if (navigator) {
+            navigator.push({
+              name: 'detail',
+              component: Detail,
+              params: {
+                productTitle: product.title
+              }
+            })
+          }
+        }}
+        avatar
+      >
+        <Left>
+          <Thumbnail square size={40} source={product.image}/>
+        </Left>
+        <Body>
+        <Text>{product.title}</Text>
+        <Text note>{product.subTitle}</Text>
+        </Body>
+      </ListItem>
+    )
+  };
+
+}
+```
+
+跟之前的 home.js 相比少了一半的代碼，而且 NativeBase 的樣式和效果還比我們實現的更美觀。因此，合理使用第三方組件，可大大提高開發的效率和質量。
+
+### NativeBase 如何解決跨平台問題
+
+之前為了實現分頁效果，使用了平台差異化的方式
+
+- iOS App：TabBarIOS
+- Android App：ViewPagerAndroid
+
+如果使用 NativeBase 提供的 Footer Tabs 就可以解決這個問題，修改 main.ios.js 文件的代碼：
+
+```javascript
+import React, {Component} from 'react';
+
+import Home from './Home';
+import More from "./More";
+import {Badge, Button, Container, Content, Footer, FooterTab, Icon, Text} from "native-base";
+
+
+export default class Main extends Component<{}> {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedTab: 'home'
+    }
+  }
+
+  render() {
+    return (
+      <Container>
+        {this._renderContent()}
+
+        <Footer>
+          <FooterTab>
+            <Button active={this.state.selectedTab === 'home'}
+                    onPress={() => this.setState({selectedTab: 'home'})}>
+              <Icon name="ios-apps-outline"/>
+              <Text>首頁</Text>
+            </Button>
+            <Button badge
+                    active={this.state.selectedTab === 'more'}
+                    onPress={() => this.setState({selectedTab: 'more'})}>
+              <Badge><Text>2</Text></Badge>
+              <Icon name="ios-compass-outline"/>
+              <Text>更多</Text>
+            </Button>
+          </FooterTab>
+        </Footer>
+      </Container>
+    )
+  }
+
+  _renderContent() {
+    if (this.state.selectedTab === 'home') {
+      return (
+        <Content>
+          <Home navigator={this.props.navigator}/>
+        </Content>
+      );
+    } else {
+      return (
+        <Content>
+          <More navigator={this.props.navigator}/>
+        </Content>
+      )
+    }
+
+  }
+
+}
+```
+
+接著將文件全部複製到 main.android.js 文件中。運行效果來看，使用 NativeBase 的 FooterTab 組件又輕鬆實現跨平台的代碼複用。接著將 main.ios.js 修改為 main.js，刪除 main.android.js。
+
+從上述使用第三方組件的例子中，想必讀者已經桿數到合理使用第三方組件，可大大減少代碼量、提高開發效率。但是，使用第三方組件也是有一定風險的，例如：
+
+- 作者停止維護
+- 發現的問題修復不及時
+- 組件的兼容性不好
+
+等。因此，在選擇第三方組件的時後，需要仔細考察關注度、更新頻率、引用次數以及開發者評價等因素。
+
+## 小結
+
+高效工作一直是職場人士追求的目標，透過特定平台組件和第三方組件的使用，讓開發者更高效開發屬於自己的 App，運用熱門的第三方庫，很大程度上簡化自己的代碼實現，加快應用開發的效率，大大降低開發成本。
