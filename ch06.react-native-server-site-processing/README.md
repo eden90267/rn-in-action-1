@@ -339,51 +339,61 @@ var router = express.Router();
 
 var products = [
   {
+    id: 1,
     image: './images/advertisement-image-01.jpg',
     title: '商品 1',
     subTitle: '描述 1'
   },
   {
+    id: 2,
     image: './images/advertisement-image-01.jpg',
     title: '商品 2',
     subTitle: '描述 2'
   },
   {
+    id: 3,
     image: './images/advertisement-image-01.jpg',
     title: '商品 3',
     subTitle: '描述 3'
   },
   {
+    id: 4,
     image: './images/advertisement-image-01.jpg',
     title: '商品 3',
     subTitle: '描述 3'
   },
   {
+    id: 5,
     image: './images/advertisement-image-01.jpg',
     title: '商品 4',
     subTitle: '描述 4'
   },
   {
+    id: 6,
     image: './images/advertisement-image-01.jpg',
     title: '商品 5',
     subTitle: '描述 5'
   },
   {
+    id: 7,
     image: './images/advertisement-image-01.jpg',
     title: '商品 6',
     subTitle: '描述 6'
   },
   {
+    id: 8,
     image: './images/advertisement-image-01.jpg',
     title: '商品 7',
     subTitle: '描述 7'
   },
   {
+    id: 9,
     image: './images/advertisement-image-01.jpg',
     title: '商品 8',
     subTitle: '描述 8'
   },
   {
+    id: 10,
     image: './images/advertisement-image-01.jpg',
     title: '商品 9',
     subTitle: '描述 9'
@@ -407,3 +417,100 @@ module.exports = router;
 #### 3. HTTP API 調適利器 Postman
 
 實際開發應用中，應該使用告高效的 HTTP 調試工具：Postman。
+
+### 新建商品接口
+
+```javascript
+// products.js
+
+router.post('/', function (req, res, next) {
+  products = products.concat(req.body);
+  res.send(JSON.stringify(products));
+});
+```
+
+#### 更新商品接口
+
+```javascript
+router.put('/:id', function (req, res, next) {
+  for (var i = 0; i < products.length; i++) {
+    if (products[i].id === parseInt(req.params.id)) { // 注意 req.params 裡的值是字符串類型的數據
+      products[i] = req.body;
+    }
+  }
+
+  res.send(JSON.stringify(products));
+});
+```
+
+#### 刪除商品接口
+
+```javascript
+router.delete('/:id', function (req, res, next) {
+  for (var i = 0; i < products.length; i++) {
+    if (products[i].id === parseInt(req.params.id)) {
+      products.splice(i, 1);
+    }
+  }
+
+  res.send('Success');
+});
+```
+
+這樣 CRUD 都完成了，接下來繼續回到移動端開發中，完善我們的 React Native 應用。
+
+## 網絡前後端交互的原理 fetch
+
+React Native 為了實現網絡交互的功能，提供了如下兩種 API：
+
+- XMLHttpRequest
+- fetch
+
+XMLHttpRequest 用法如下：
+
+```javascript
+var request = new XMLHttpRequest();
+request.onreadystatechange = (err) => {
+  if (request.status === 200) {
+    console.log('success', request.responseText);
+  } else {
+    console.warn('fail');
+  }
+}
+
+request.open('GET', 'http://127.0.0.1:3000/');
+request.send();
+```
+
+但 XMLHttpRequest 不符合關注分離 (Separation of Concerns)
+的原則，配置和調用方式也比較混亂，而且基於事件的異步模型寫起來也沒有現代的
+Promise、generator/yield 以及 async/await 友好。
+
+因此 W3C 提出了替代 XMLHttpRequest 的新接口 fetch。相比 XMLHttpRequest
+來說，fetch 是一個封裝程度較高的網絡 API，而且 fetch 對於網絡的異步處理完全基於
+Promise，API 更加簡潔美好。
+
+使用 fetch 用法如下：
+
+```javascript
+const req = new Request('http://127.0.0.1:3000', {method: 'GET'});
+fetch(req).then((res) => res)
+.then((result, done) => {
+  console.log('result = ' + JSON.stringify(result));
+  if (!done) {
+    console.log('success');
+  } else {
+    console.warn('fail');
+  }
+})
+```
+
+## App 從服務器獲取數據
+
+### 獲取商品信息
+
+```javascript
+// home.js
+
+
+```
